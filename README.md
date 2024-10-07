@@ -111,10 +111,10 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 
 ## Procedures e Triggers
 
-**Procedure:** atualizar_dados_avaliacao
+**Procedure:** atualizar_dados_avaliacao<br>
 **Descrição:** Sincroniza dados de avaliações, turmas, projetos, clientes e unidades de negócio entre o pbavaliacoes e o db_sistema.
 
-**Trigger:** after_insert_entregaveis
+**Trigger:** after_insert_entregaveis<br>
 **Descrição:** Aciona a procedure atualizar_dados_avaliacao após a inserção de um novo entregável.
 
 ## Boas Práticas Adotadas
