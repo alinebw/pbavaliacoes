@@ -1,22 +1,15 @@
-CREATE PROCEDURE `atualiza_pbavaliacoes` ()
+DELIMITER $$
+
+CREATE PROCEDURE atualizar_dados_avaliacao(IN p_id_avaliacao INT)
 BEGIN
-DECLARE v_id_projeto INT DEFAULT NULL;
-    DECLARE v_id_turma INT DEFAULT NULL;
-    DECLARE v_id_cliente INT DEFAULT NULL;
-    DECLARE v_id_bu INT DEFAULT NULL;
-    DECLARE v_nome_projeto VARCHAR(100) DEFAULT NULL;
-    DECLARE v_nome_turma VARCHAR(100) DEFAULT NULL;
-    DECLARE v_nome_cliente VARCHAR(100) DEFAULT NULL;
-    DECLARE v_nome_bu VARCHAR(100) DEFAULT NULL;
-
-    -- Variáveis para tratamento de erros
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        -- Em caso de erro, realiza ROLLBACK e finaliza a procedure
-        ROLLBACK;
-    END;
-
-    START TRANSACTION;
+    DECLARE v_id_projeto INT;
+    DECLARE v_id_turma INT;
+    DECLARE v_id_cliente INT;
+    DECLARE v_id_bu INT;
+    DECLARE v_nome_projeto VARCHAR(100);
+    DECLARE v_nome_turma VARCHAR(100);
+    DECLARE v_nome_cliente VARCHAR(100);
+    DECLARE v_nome_bu VARCHAR(100);
 
     -- Obter id_turma e id_projeto a partir do id_avaliacao no db_sistema
     SELECT
@@ -34,13 +27,6 @@ DECLARE v_id_projeto INT DEFAULT NULL;
     JOIN db_sistema.projetos p ON t.id_projeto = p.id_projeto
     WHERE a.id_avaliacao = p_id_avaliacao;
 
-    -- Verifica se os dados foram encontrados
-    IF v_id_turma IS NULL OR v_id_projeto IS NULL THEN
-        -- Dados não encontrados, realiza ROLLBACK e sai da procedure
-        ROLLBACK;
-        LEAVE atualizar_dados_avaliacao;
-    END IF;
-
     -- Obter id_cliente e id_bu a partir do id_projeto no db_sistema
     SELECT
         cp.id_cliente,
@@ -57,13 +43,6 @@ DECLARE v_id_projeto INT DEFAULT NULL;
     JOIN db_sistema.business_unities bu ON c.id_bu = bu.id_bu
     WHERE cp.id_projeto = v_id_projeto
     LIMIT 1; -- Considerando que cada projeto tem um cliente principal
-
-    -- Verifica se os dados foram encontrados
-    IF v_id_cliente IS NULL OR v_id_bu IS NULL THEN
-        -- Dados não encontrados, realiza ROLLBACK e sai da procedure
-        ROLLBACK;
-        LEAVE atualizar_dados_avaliacao;
-    END IF;
 
     -- Atualizar ou inserir o projeto no pbavaliacoes
     IF NOT EXISTS (SELECT 1 FROM projetos WHERE id_projeto = v_id_projeto) THEN
@@ -94,5 +73,6 @@ DECLARE v_id_projeto INT DEFAULT NULL;
     SET id_turma = v_id_turma
     WHERE id_avaliacao = p_id_avaliacao;
 
-    COMMIT;
-END
+END$$
+
+DELIMITER ;
