@@ -32,51 +32,64 @@ CREATE TABLE clientes_projetos (
     FOREIGN KEY (id_projeto) REFERENCES projetos(id_projeto)
 );
 
--- Tabela de Turmas (id_turma é o id_checklist do db_sistema)
-CREATE TABLE turmas (
-    id_turma INT NOT NULL PRIMARY KEY, -- id_turma vem do db_sistema (id_checklist)
-    nome_turma VARCHAR(100) NOT NULL,
+-- Tabela de Checklists (anteriormente 'turmas')
+CREATE TABLE checklists (
+    id_checklist INT NOT NULL PRIMARY KEY, -- id_checklist vem do db_sistema
+    nome_checklist VARCHAR(100) NOT NULL,
     id_projeto INT NOT NULL, -- FK referenciando projeto na tabela local
-    csat_turma DECIMAL(5, 2) DEFAULT NULL, -- Média CSAT da turma
+    csat_checklist DECIMAL(5, 2) DEFAULT NULL, -- Média CSAT do checklist
+    total_entregaveis INT DEFAULT 0, -- Total de entregáveis recebidos
     FOREIGN KEY (id_projeto) REFERENCES projetos(id_projeto)
 );
 
 -- Tabela de Avaliações
 CREATE TABLE avaliacoes (
     id_avaliacao INT NOT NULL PRIMARY KEY, -- Gerado antes do formulário ser aplicado
-    id_turma INT NOT NULL, -- FK referenciando a turma na tabela local
+    id_checklist INT NOT NULL, -- FK referenciando a checklist na tabela local
     data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tipo_avaliacao VARCHAR(50) NOT NULL, -- Ex: 'CSAT', 'NPS'
     csat_avaliacao DECIMAL(5, 2) DEFAULT NULL, -- Média CSAT por avaliação
-    FOREIGN KEY (id_turma) REFERENCES turmas(id_turma)
+    total_entregaveis INT DEFAULT 0, -- Total de entregáveis recebidos
+    total_participantes INT DEFAULT 0, -- Total de participantes (preenchido manualmente)
+    FOREIGN KEY (id_checklist) REFERENCES checklists(id_checklist)
 );
 
 -- Tabela de Entregáveis (Formulários preenchidos)
 CREATE TABLE entregaveis (
-    id_entregavel INT AUTO_INCREMENT PRIMARY KEY,
+    id_entregavel VARCHAR(255) NOT NULL PRIMARY KEY, -- Recebe o 'token' do webhook payload
     id_avaliacao INT NOT NULL, -- FK para a avaliação
-    data_recebimento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_recebimento TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Pode ser sobrescrito com 'submitted_at' do payload
     csat_entregavel DECIMAL(5, 2) DEFAULT NULL, -- Média CSAT do entregável
+    id_typeform VARCHAR(50), -- ID do Typeform associado (from 'definition' object)
+    nome_respondente VARCHAR(100), -- Nome do respondente (se coletado)
     FOREIGN KEY (id_avaliacao) REFERENCES avaliacoes(id_avaliacao)
 );
 
 -- Tabela de Perguntas
 CREATE TABLE perguntas (
-    id_pergunta INT AUTO_INCREMENT PRIMARY KEY,
+    id_pergunta VARCHAR(50) NOT NULL, -- ID proveniente do 'fields' object in webhook payload
     id_avaliacao INT NOT NULL, -- FK para a avaliação
-    texto_pergunta VARCHAR(255) NOT NULL,
-    tipo_pergunta VARCHAR(50) NOT NULL, -- Ex: 'csat_conteudo', 'sugestoes'
+    texto_pergunta VARCHAR(255) NOT NULL, -- 'title' from 'fields' object
+    tipo_pergunta VARCHAR(50) NOT NULL, -- Tipo de pergunta (e.g., 'picture_choice', 'rating', 'text', 'nps')
     ordem INT NOT NULL, -- Ordem da pergunta no formulário
+    opcional BOOLEAN DEFAULT FALSE, -- Indica se a pergunta é opcional
+    PRIMARY KEY (id_pergunta, id_avaliacao), -- Composto para permitir mesmas perguntas em avaliações diferentes
     FOREIGN KEY (id_avaliacao) REFERENCES avaliacoes(id_avaliacao)
 );
 
 -- Tabela de Respostas
 CREATE TABLE respostas (
     id_resposta INT AUTO_INCREMENT PRIMARY KEY,
-    id_entregavel INT NOT NULL, -- FK para o entregável (formulário)
-    id_pergunta INT NOT NULL, -- FK para a pergunta
-    valor_resposta TINYINT NOT NULL, -- Valor da resposta (ex: nota de 1 a 5)
+    id_entregavel VARCHAR(255) NOT NULL, -- FK para o entregável (formulário), 'token' from payload
+    id_pergunta VARCHAR(50) NOT NULL, -- FK para a pergunta, 'id' from 'fields' object
+    id_avaliacao INT NOT NULL, -- Necessário para compor a chave estrangeira com id_pergunta
+    valor_resposta DECIMAL(5,2), -- Valor da resposta (e.g., nota de 1 a 5, 0 a 10)
     texto_resposta VARCHAR(500), -- Comentário textual (se aplicável)
     FOREIGN KEY (id_entregavel) REFERENCES entregaveis(id_entregavel),
-    FOREIGN KEY (id_pergunta) REFERENCES perguntas(id_pergunta)
+    FOREIGN KEY (id_pergunta, id_avaliacao) REFERENCES perguntas(id_pergunta, id_avaliacao)
 );
+
+
+-- Adicionar indexes para melhorar performance de consultas em campos frequentemente buscados:
+CREATE INDEX idx_respostas_entregavel ON respostas(id_entregavel);
+CREATE INDEX idx_respostas_pergunta ON respostas(id_pergunta);
