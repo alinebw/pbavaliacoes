@@ -1,15 +1,15 @@
-use pbavaliacoes_testes;
+USE pbavaliacoes;
 
 -- Tabela de Unidades de Negócio (Business Unities)
 CREATE TABLE business_unities (
-    id_bu INT NOT NULL PRIMARY KEY, -- Referenciado do db_sistema por procedure
+    id_bu INT NOT NULL PRIMARY KEY, -- Referenciado do pmohsm por procedure
     nome_bu VARCHAR(100) NOT NULL,
     csat_bu DECIMAL(5, 2) DEFAULT NULL -- Média CSAT da unidade de negócio
 );
 
 -- Tabela de Clientes
 CREATE TABLE clientes (
-    id_cliente INT NOT NULL PRIMARY KEY, -- Referenciado do db_sistema por procedure
+    id_cliente INT NOT NULL PRIMARY KEY, -- Referenciado do pmohsm por procedure
     nome_cliente VARCHAR(100) NOT NULL,
     id_bu INT NOT NULL, -- FK referenciando id_bu na tabela local
     csat_cliente DECIMAL(5, 2) DEFAULT NULL, -- Média CSAT do cliente
@@ -18,23 +18,23 @@ CREATE TABLE clientes (
 
 -- Tabela de Projetos
 CREATE TABLE projetos (
-    id_projeto INT NOT NULL PRIMARY KEY, -- Referenciado do db_sistema por procedure
+    id_projeto INT NOT NULL PRIMARY KEY, -- Referenciado do pmohsm por procedure
     nome_projeto VARCHAR(100) NOT NULL,
     csat_projeto DECIMAL(5, 2) DEFAULT NULL -- Média CSAT do projeto
 );
 
 -- Tabela Associativa entre Clientes e Projetos (Relacionamento muitos-para-muitos)
 CREATE TABLE clientes_projetos (
-    id_cliente INT NOT NULL, -- Referenciado do db_sistema
-    id_projeto INT NOT NULL, -- Referenciado do db_sistema
+    id_cliente INT NOT NULL, -- Referenciado do pmohsm
+    id_projeto INT NOT NULL, -- Referenciado do pmohsm
     PRIMARY KEY (id_cliente, id_projeto),
     FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente),
     FOREIGN KEY (id_projeto) REFERENCES projetos(id_projeto)
 );
 
--- Tabela de Checklists (anteriormente 'turmas')
+-- Tabela de Checklists 
 CREATE TABLE checklists (
-    id_checklist INT NOT NULL PRIMARY KEY, -- id_checklist vem do db_sistema
+    id_checklist INT NOT NULL PRIMARY KEY, -- id_checklist vem do pmohsm
     nome_checklist VARCHAR(100) NOT NULL,
     id_projeto INT NOT NULL, -- FK referenciando projeto na tabela local
     csat_checklist DECIMAL(5, 2) DEFAULT NULL, -- Média CSAT do checklist
@@ -88,8 +88,3 @@ CREATE TABLE respostas (
     FOREIGN KEY (id_entregavel) REFERENCES entregaveis(id_entregavel),
     FOREIGN KEY (id_pergunta, id_avaliacao) REFERENCES perguntas(id_pergunta, id_avaliacao)
 );
-
-
--- Adicionar indexes para melhorar performance de consultas em campos frequentemente buscados:
-CREATE INDEX idx_respostas_entregavel ON respostas(id_entregavel);
-CREATE INDEX idx_respostas_pergunta ON respostas(id_pergunta);
