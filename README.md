@@ -11,7 +11,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 - **Descrição:** Armazena as unidades de negócio (Business Units).
 - **Campos:** 
     - id_bu (INT, PK): Identificador único da unidade de negócio. Referenciado do pmohsm via procedure
-    - nome_bu (VARCHAR(100), NOT NULL): Nome da unidade de negócio
+    - nome_bu (VARCHAR(100), NOT NULL): Nome da unidade de negócio. Referenciado do pmohsm via procedure
     - csat_bu (DECIMAL(5,2), DEFAULT NULL): Média CSAT da unidade de negócio
       
 #### 2. clientes
@@ -19,7 +19,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 - **Descrição:** Armazena informações dos clientes.
 - **Campos:**
     - id_cliente (INT, PK): Identificador único do cliente. Referenciado do pmohsm via procedure
-    - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente
+    - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente. Referenciado do pmohsm via procedure
     - id_bu (INT, FK, NOT NULL): Chave estrangeira referenciando business_unities(id_bu)
     - csat_cliente (DECIMAL(5,2), DEFAULT NULL): Média CSAT do cliente
       
@@ -28,7 +28,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 - **Descrição:** Contém dados dos projetos.
 - **Campos:**
     - id_projeto (INT, PK): Identificador único do projeto. Referenciado do pmohsm via procedure
-    - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto
+    - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto. Referenciado do pmohsm via procedure
     - csat_projeto (DECIMAL(5,2), DEFAULT NULL): Média CSAT do projeto
       
 #### 4. clientes_projetos
@@ -42,8 +42,8 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 
 - **Descrição:** Armazena informações de checklists (turmas)
 - **Campos:**
-    - id_checklist (INT, PK): Identificador único do checklist. Vem do pmohsm
-    - nome_checklist (VARCHAR(100), NOT NULL): Nome do checklist
+    - id_checklist (INT, PK): Identificador único do checklist. Recebe campo oculto do payload webhook
+    - nome_checklist (VARCHAR(100), NOT NULL): Nome do checklist. Referenciado do pmohsm via procedure
     - id_projeto (INT, FK, NOT NULL): Chave estrangeira referenciando projetos(id_projeto)
     - csat_checklist (DECIMAL(5,2), DEFAULT NULL): Média CSAT do checklist
     - total_entregaveis (INT, DEFAULT 0): Total de entregáveis recebidos
@@ -52,8 +52,8 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 
 - **Descrição:** Contém os diferentes tipos de avaliações.
 - **Campos:**
-    - id_avaliacao (INT, PK): Identificador único da avaliação. Gerado antes da aplicação do formulário
-    - id_turma (INT, FK, NOT NULL): Chave estrangeira referenciando checklists(id_checklists)
+    - id_avaliacao (INT, PK): Identificador único da avaliação. Gerado antes da aplicação do formulário. Recebe campo oculto do payload webhook
+    - id_checklist (INT, FK, NOT NULL): Chave estrangeira referenciando checklists(id_checklists)
     - data_avaliacao (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP): Data da avaliação
     - tipo_avaliacao (VARCHAR(50), NOT NULL): Tipo de avaliação (e.g., 'CSAT', 'NPS')
     - csat_avaliacao (DECIMAL(5,2), DEFAULT NULL): Média CSAT da avaliação
@@ -67,7 +67,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 - **Descrição:** Registra os formulários preenchidos (entregáveis).
 - **Campos:**
     - id_entregavel (VARCHAR(255), PK): Identificador único do entregável. Recebe o 'token' do payload do webhook.
-    - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao).
+    - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao). 
     - data_recebimento (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP): Data de recebimento do entregável (pode ser sobrescrita com 'submitted_at' do payload).
     - csat_entregavel (DECIMAL(5,2), DEFAULT NULL): Média CSAT do entregável.
     - id_typeform (VARCHAR(50)): ID do Typeform associado (proveniente do objeto 'definition' do payload).
@@ -77,7 +77,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 
 - **Descrição:** Armazena as perguntas dos formulários.
 - **Campos:**
-    - id_pergunta (INT, PK, AUTO_INCREMENT): Identificador único da pergunta.
+    - id_pergunta (INT, PK, AUTO_INCREMENT): Identificador único da pergunta. Recebe do webhook objeto definition/fields.
     - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao).
     - texto_pergunta (VARCHAR(255), NOT NULL): Texto da pergunta.
     - tipo_pergunta (VARCHAR(50), NOT NULL): Tipo da pergunta. Recebe do webhook objeto definition.
@@ -88,7 +88,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 
 - **Descrição:** Contém as respostas dadas pelos participantes.
 - **Campos:**
-    - id_resposta (INT, PK, AUTO_INCREMENT): Identificador único da resposta.
+    - id_resposta (INT, PK, AUTO_INCREMENT): Identificador único da resposta. Recebe do webhook objeto definition/answers.
     - id_entregavel (INT, FK, NOT NULL): Chave estrangeira referenciando entregaveis(id_entregavel).
     - id_pergunta (INT, FK, NOT NULL): Chave estrangeira referenciando perguntas(id_pergunta).
     - id_avaliacao (INT, FK, NOT NULL): Necessário para compor a chave estrangeira com id_pergunta.
