@@ -1,8 +1,8 @@
-# pbavaliacoes - Documentação do Banco de Dados
+# avaliacoes_db - Documentação do Banco de Dados
 
 ## Visão Geral
 
-O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedbacks coletados via Typeform. Ele é alimentado por webhooks do Typeform e integra-se com o database do sistema para sincronizar dados essenciais, como informações de clientes, projetos, turmas e unidades de negócio. O objetivo principal é centralizar os dados de todas as avaliações realizadas, calculando métricas e disponibilizando insumos que serão enviados para o database do sistema através de procedures e para dashboards em Power BI com Power Query.
+Este banco de dados é projetado para se conectar com sistemas externos, permitindo a sincronização de dados essenciais, como informações de clientes e projetos. A integração utiliza webhooks para receber dados em tempo real de formulários e procedures (a serem desenvolvidas) para atualizar e enviar métricas de avaliação a outros sistemas, garantindo consistência e automação no fluxo de dados.
 
 ## Estrutura do Banco de Dados
 
@@ -10,16 +10,16 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 #### 1. business_unities
 - **Descrição:** Armazena as unidades de negócio (Business Units).
 - **Campos:** 
-    - id_bu (INT, PK): Identificador único da unidade de negócio. Referenciado do pmohsm via procedure
-    - nome_bu (VARCHAR(100), NOT NULL): Nome da unidade de negócio. Referenciado do pmohsm via procedure
+    - id_bu (INT, PK): Identificador único da unidade de negócio. Referenciado do sistema_db via procedure
+    - nome_bu (VARCHAR(100), NOT NULL): Nome da unidade de negócio. Referenciado do sistema_db via procedure
     - csat_bu (DECIMAL(5,2), DEFAULT NULL): Média CSAT da unidade de negócio
       
 #### 2. clientes
 
 - **Descrição:** Armazena informações dos clientes.
 - **Campos:**
-    - id_cliente (INT, PK): Identificador único do cliente. Referenciado do pmohsm via procedure
-    - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente. Referenciado do pmohsm via procedure
+    - id_cliente (INT, PK): Identificador único do cliente. Referenciado do sistema_db via procedure
+    - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente. Referenciado do sistema_db via procedure
     - id_bu (INT, FK, NOT NULL): Chave estrangeira referenciando business_unities(id_bu)
     - csat_cliente (DECIMAL(5,2), DEFAULT NULL): Média CSAT do cliente
       
@@ -27,8 +27,8 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 
 - **Descrição:** Contém dados dos projetos.
 - **Campos:**
-    - id_projeto (INT, PK): Identificador único do projeto. Referenciado do pmohsm via procedure
-    - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto. Referenciado do pmohsm via procedure
+    - id_projeto (INT, PK): Identificador único do projeto. Referenciado do sistema_db via procedure
+    - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto. Referenciado do sistema_db via procedure
     - csat_projeto (DECIMAL(5,2), DEFAULT NULL): Média CSAT do projeto
       
 #### 4. clientes_projetos
@@ -43,7 +43,7 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 - **Descrição:** Armazena informações de checklists (turmas)
 - **Campos:**
     - id_checklist (INT, PK): Identificador único do checklist. Recebe campo oculto do payload webhook
-    - nome_checklist (VARCHAR(100), NOT NULL): Nome do checklist. Referenciado do pmohsm via procedure
+    - nome_checklist (VARCHAR(100), NOT NULL): Nome do checklist. Referenciado do sistema_db via procedure
     - id_projeto (INT, FK, NOT NULL): Chave estrangeira referenciando projetos(id_projeto)
     - csat_checklist (DECIMAL(5,2), DEFAULT NULL): Média CSAT do checklist
     - total_entregaveis (INT, DEFAULT 0): Total de entregáveis recebidos
@@ -114,17 +114,14 @@ O banco de dados pbavaliacoes foi projetado para gerenciar avaliações e feedba
 ## Fluxo de Dados e Integração
 
 **Recebimento de Dados:** Quando um formulário é enviado, uma função Lambda recebe o payload do webhook do Typeform e envia os dados para as devidas tabelas.<br>
-**Atualização de Dados:** Duas a trêz vezes ao dia, uma trigger é acionada e chama uma procedure que sincroniza o pbavaliacoes com o pmohsm.<br>
+**Atualização de Dados:** Duas a trêz vezes ao dia, uma trigger é acionada e chama uma procedure que sincroniza o avaliacoes_db com o sistema_db.<br>
 **Cálculo de Métricas:** Após a sincronização, são calculados os valores de CSAT e NPS.<br>
-**Envio de Métricas:** As métricas calculadas são enviadas de volta ao pmohsm através de procedures.<br>
+**Envio de Métricas:** As métricas calculadas são enviadas de volta ao sistema_db através de procedures.<br>
 
 ## Procedures e Triggers
 
-**Procedure:** 
-**Descrição:** 
-
-**Trigger:** 
-**Descrição:** 
+**Procedure:** (em desenvolvimento)
+**Trigger:** (em desenvolvimento)
 
 ## Boas Práticas Adotadas
 
