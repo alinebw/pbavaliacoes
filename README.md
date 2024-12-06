@@ -1,4 +1,4 @@
-# avaliacoes_db - Documentação do Banco de Dados
+# pbavaliacoes - Documentação do Banco de Dados
 
 ## Visão Geral
 
