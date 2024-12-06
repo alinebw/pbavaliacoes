@@ -13,6 +13,9 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - id_bu (INT, PK): Identificador único da unidade de negócio. Referenciado do sistema_db via procedure
     - nome_bu (VARCHAR(100), NOT NULL): Nome da unidade de negócio. Referenciado do sistema_db via procedure
     - csat_bu (DECIMAL(5,2), DEFAULT NULL): Média CSAT da unidade de negócio
+    - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
+    - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
+    - perc_detratores (DECIMAL(5,2)): Porcentagem de detratores
       
 #### 2. clientes
 
@@ -22,6 +25,9 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente. Referenciado do sistema_db via procedure
     - id_bu (INT, FK, NOT NULL): Chave estrangeira referenciando business_unities(id_bu)
     - csat_cliente (DECIMAL(5,2), DEFAULT NULL): Média CSAT do cliente
+    - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
+    - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
+    - perc_detratores (DECIMAL(5,2)): Porcentagem de detratores
       
 #### 3. projetos
 
@@ -30,6 +36,9 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - id_projeto (INT, PK): Identificador único do projeto. Referenciado do sistema_db via procedure
     - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto. Referenciado do sistema_db via procedure
     - csat_projeto (DECIMAL(5,2), DEFAULT NULL): Média CSAT do projeto
+    - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
+    - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
+    - perc_detratores (DECIMAL(5,2)): Porcentagem de detratores
       
 #### 4. clientes_projetos
 
@@ -47,6 +56,9 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - id_projeto (INT, FK, NOT NULL): Chave estrangeira referenciando projetos(id_projeto)
     - csat_checklist (DECIMAL(5,2), DEFAULT NULL): Média CSAT do checklist
     - total_entregaveis (INT, DEFAULT 0): Total de entregáveis recebidos
+    - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
+    - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
+    - perc_detratores (DECIMAL(5,2)): Porcentagem de detratores
 
 #### 6. avaliacoes
 
@@ -56,44 +68,77 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - id_checklist (INT, FK, NOT NULL): Chave estrangeira referenciando checklists(id_checklists)
     - data_avaliacao (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP): Data da avaliação
     - tipo_avaliacao (VARCHAR(50), NOT NULL): Tipo de avaliação (e.g., 'CSAT', 'NPS')
-    - csat_avaliacao (DECIMAL(5,2), DEFAULT NULL): Média CSAT da avaliação
     - total_entregaveis (INT, DEFAULT 0): Total de entregáveis recebidos
     - total_participantes (INT, DEFAULT 0): Total de participantes (preenchido manualmente)
     - status ENUM('Backlog', 'Em andamento', 'Encerrada') DEFAULT 'Backlog'
+    - id_avaliacao (PK, INT): Identificador único da avaliação
+    - csat_avaliacao (DECIMAL(5,2), DEFAULT NULL): Média CSAT da avaliação
+    - csat_conteudo (DECIMAL(5,2)): CSAT médio do conteúdo
+    - csat_consultor (DECIMAL(5,2)): CSAT médio do consultor
+    - csat_evento (DECIMAL(5,2)): CSAT médio do evento
+    - nps_avaliacao (DECIMAL(5,2)): NPS calculado para a avaliação
+    - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
+    - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
+    - perc_detratores (DECIMAL(5,2)): Porcentagem de detratores
 
 
 #### 7. entregaveis
 
 - **Descrição:** Registra os formulários preenchidos (entregáveis).
 - **Campos:**
-    - id_entregavel (VARCHAR(255), PK): Identificador único do entregável. Recebe o 'token' do payload do webhook.
-    - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao). 
-    - data_recebimento (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP): Data de recebimento do entregável (pode ser sobrescrita com 'submitted_at' do payload).
-    - csat_entregavel (DECIMAL(5,2), DEFAULT NULL): Média CSAT do entregável.
-    - id_typeform (VARCHAR(50)): ID do Typeform associado (proveniente do objeto 'definition' do payload).
-    - nome_respondente (VARCHAR(100)): Nome do respondente (se coletado).
+    - id_entregavel (PK, VARCHAR): Identificador único do entregável
+    - id_avaliacao (FK, VARCHAR): Referência à avaliação
+    - id_checklist (FK, VARCHAR): Referência ao checklist correspondente
+    - id_projeto (VARCHAR(45)): Referência ao projeto correspondente
+    - data_recebimento (DATETIME): Data de recebimento do entregável
+    - csat_consultor (DECIMAL(5,2)): CSAT do consultor para o entregável
+    - csat_conteudo (DECIMAL(5,2)): CSAT do conteúdo para o entregável
+    - comentario_obrigatorio (VARCHAR): Comentário obrigatório do formulário enviado
+    - comentario_opcional (VARCHAR): Comentário opcional do formulário enviado
+    - nome_respondente (VARCHAR): Comentário opcional do formulário enviado
+    - nps_status (ENUM): Opção promotor, neutro e detrator
+    - nps (DECIMAL(5,2)): nps relacionado ao formulário
+    - status (ENUM): Status do entregável ('PENDENTE', 'PROCESSADO')
+    - data_processamento (DATETIME): Data de processamento do entregável
+
+    Índices:
+    idx_entregaveis_avaliacao em id_avaliacao.
+    idx_entregaveis_data_recebimento em data_recebimento.
+
 
 #### 8. perguntas
 
 - **Descrição:** Armazena as perguntas dos formulários.
 - **Campos:**
     - id_pergunta (INT, PK, AUTO_INCREMENT): Identificador único da pergunta. Recebe do webhook objeto definition/fields.
-    - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao).
-    - texto_pergunta (VARCHAR(255), NOT NULL): Texto da pergunta.
+    - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao)
+    - texto_pergunta (VARCHAR(255), NOT NULL): Texto da pergunta
     - tipo_pergunta (VARCHAR(50), NOT NULL): Tipo da pergunta. Recebe do webhook objeto definition.
-    - opcional (BOOLEAN, DEFAULT FALSE): Indica se a pergunta é opcional.
-    - ordem (INT, NOT NULL): Ordem da pergunta no formulário.
+    - ref (VARCHAR(50)): Referência da pergunta no Typeform
+    - ordem (INT, NOT NULL): Ordem da pergunta no formulário
 
 #### 9. respostas
 
 - **Descrição:** Contém as respostas dadas pelos participantes.
 - **Campos:**
-    - id_resposta (INT, PK, AUTO_INCREMENT): Identificador único da resposta. Recebe do webhook objeto definition/answers.
-    - id_entregavel (INT, FK, NOT NULL): Chave estrangeira referenciando entregaveis(id_entregavel).
-    - id_pergunta (INT, FK, NOT NULL): Chave estrangeira referenciando perguntas(id_pergunta).
-    - id_avaliacao (INT, FK, NOT NULL): Necessário para compor a chave estrangeira com id_pergunta.
-    - valor_resposta (TINYINT, NOT NULL): Recebe do webhook se tipo da resposta é number.
-    - texto_resposta (VARCHAR(500)): Recebe do webhook se tipo da resposta é text.
+    - id_resposta (PK, INT, AI): Identificador único da resposta
+    - id_entregavel (VARCHAR(255)): Referência ao entregável correspondente
+    - id_pergunta (VARCHAR(50)): Identificador da pergunta correspondente
+    - id_avaliacao (INT): Identificador da avaliação à qual a resposta pertence
+    - valor_resposta (DECIMAL(5,2)): Valor numérico da resposta
+    - texto_resposta (TEXT): Texto da resposta
+    - tipo_resposta (VARCHAR(50)): Tipo da resposta
+    - resposta_json (JSON): Representação JSON da resposta, se aplicável
+    - csat_conteudo (DECIMAL(5,2)): Valor de CSAT para o conteúdo
+    - ref (VARCHAR(50)): Referência da pergunta no Typeform
+
+#### 10. log_processamento
+
+- **Descrição:** Registra o status de processamento do webhook.
+- **Campos:**
+    - id_log (PK, INT): Identificador único do log.
+    - status (ENUM): Status do processamento ('PROCESSADO', 'RECEBIDO', 'ERRO').
+    - data_hora (DATETIME): Data e hora do registro.
       
 ## Relacionamentos Chave
 
