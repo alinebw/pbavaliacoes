@@ -173,5 +173,5 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 - **Normalização:** O banco de dados foi projetado seguindo as regras de normalização para evitar redundâncias e inconsistências.
 - **Chaves Primárias e Estrangeiras:** Uso adequado de PKs e FKs para manter a integridade referencial.
 - **Procedures e Triggers:** Automação de processos repetitivos e críticos, garantindo a sincronização de dados entre bancos.
-- **Comentários e Documentação:** Scripts comentados facilitam a manutenção e compreensão do código.
+- **Comentários e Documentação:** Scripts comentados para facilitar a manutenção e compreensão do código.
 - **Integração com Sistemas Externos:** Uso de webhooks e integração com o database do sistema para um fluxo de dados eficiente.
