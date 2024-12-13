@@ -13,6 +13,7 @@ BEGIN
     DECLARE v_csat_conteudo_opcao VARCHAR(20) DEFAULT NULL; -- Para armazenar o texto completo
     DECLARE v_csat_conteudo_opcao_online VARCHAR(20) DEFAULT NULL;
     DECLARE v_plataforma_acessivel VARCHAR(3) DEFAULT NULL;
+    DECLARE v_tipo_avaliacao VARCHAR(20) DEFAULT NULL;
     DECLARE v_comentario_obrigatorio TEXT DEFAULT ''; -- Valor padrão vazio
     DECLARE v_comentario_opcional TEXT DEFAULT NULL;
     DECLARE v_nome_respondente VARCHAR(100) DEFAULT NULL;
@@ -38,6 +39,13 @@ BEGIN
         v_nome_respondente
     FROM vw_perguntas_respostas
     WHERE id_entregavel = p_id_entregavel;
+    
+        -- Determina o tipo de avaliação
+    IF v_plataforma_acessivel IS NOT NULL THEN
+        SET v_tipo_avaliacao = 'Online';
+    ELSE
+        SET v_tipo_avaliacao = 'Presencial';
+    END IF;
 
     -- Determina o status do NPS
     IF v_nps >= 9 THEN
@@ -59,6 +67,7 @@ BEGIN
         nps_status = v_nps_status,
         csat_conteudo_opcao = v_csat_conteudo_opcao,
         plataforma_acessivel = v_plataforma_acessivel,
+        tipo_avaliacao = v_tipo_avaliacao,
         comentario_obrigatorio = v_comentario_obrigatorio,
         comentario_opcional = v_comentario_opcional,
         nome_respondente = v_nome_respondente
