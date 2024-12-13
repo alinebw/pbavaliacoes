@@ -1,4 +1,5 @@
-- Procedure para calcular nps e preencher perc_detratores, perc_neutros e perc_promotores
+-- Procedure para calcular nps e preencher perc_detratores, perc_neutros e perc_promotores
+
 DELIMITER //
 
 CREATE PROCEDURE sp_calcula_nps (
