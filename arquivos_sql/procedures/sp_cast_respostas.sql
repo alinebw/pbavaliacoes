@@ -10,8 +10,8 @@ BEGIN
     DECLARE v_csat_evento DECIMAL(5, 2) DEFAULT NULL;
     DECLARE v_nps DECIMAL(5, 2) DEFAULT NULL;
     DECLARE v_nps_status ENUM('PROMOTOR', 'NEUTRO', 'DETRATOR');
-    DECLARE v_csat_conteudo_opcao VARCHAR(20) DEFAULT NULL; -- Para armazenar o texto completo
-    DECLARE v_csat_conteudo_opcao_online VARCHAR(20) DEFAULT NULL;
+    DECLARE v_csat_conteudo_opcao VARCHAR(20) DEFAULT NULL;
+    DECLARE v_csat_conteudo_online_opcao VARCHAR(20) DEFAULT NULL;
     DECLARE v_plataforma_acessivel VARCHAR(3) DEFAULT NULL;
     DECLARE v_tipo_avaliacao VARCHAR(20) DEFAULT NULL;
     DECLARE v_comentario_obrigatorio TEXT DEFAULT ''; -- Valor padrão vazio
@@ -24,7 +24,8 @@ BEGIN
         MAX(CASE WHEN ref = 'csat_evento' THEN CAST(valor_resposta AS DECIMAL(5, 2)) END),
         MAX(CASE WHEN ref = 'nps' THEN CAST(valor_resposta AS DECIMAL(5, 2)) END),
         MAX(CASE WHEN ref = 'csat_conteudo' THEN texto_resposta END),
-        MAX(CASE WHEN ref = 'extra' THEN texto_resposta END),
+        MAX(CASE WHEN ref = 'csat_conteudo_online' THEN texto_resposta END),
+        MAX(CASE WHEN ref = '01JEY4V92D0W6B7Z8B85P4PJPD' THEN CAST(valor_resposta AS DECIMAL(5, 2)) END),
         MAX(CASE WHEN ref = 'comentario_obrigatorio' THEN texto_resposta END),
         MAX(CASE WHEN ref = 'comentario_opcional' THEN texto_resposta END),
         MAX(CASE WHEN ref = 'nome' THEN texto_resposta END)
@@ -32,15 +33,25 @@ BEGIN
         v_csat_consultor, 
         v_csat_evento, 
         v_nps, 
-        v_csat_conteudo_opcao, 
+        v_csat_conteudo_opcao,
+        v_csat_conteudo_online_opcao,
         v_plataforma_acessivel, 
         v_comentario_obrigatorio, 
         v_comentario_opcional, 
         v_nome_respondente
     FROM vw_perguntas_respostas
     WHERE id_entregavel = p_id_entregavel;
-    
-        -- Determina o tipo de avaliação
+
+    -- Mapeia a resposta de plataforma_acessivel
+    IF v_plataforma_acessivel = 1 THEN
+        SET v_plataforma_acessivel = 'Sim';
+    ELSEIF v_plataforma_acessivel = 0 THEN
+        SET v_plataforma_acessivel = 'Não';
+    ELSE
+        SET v_plataforma_acessivel = NULL; -- Para casos de erro ou resposta inválida
+    END IF;
+
+    -- Determina o tipo de avaliação
     IF v_plataforma_acessivel IS NOT NULL THEN
         SET v_tipo_avaliacao = 'Online';
     ELSE
@@ -65,7 +76,8 @@ BEGIN
         csat_evento = v_csat_evento,
         nps = v_nps,
         nps_status = v_nps_status,
-        csat_conteudo_opcao = v_csat_conteudo_opcao,
+        csat_conteudo_opcao = IF(v_plataforma_acessivel IS NULL, v_csat_conteudo_opcao, NULL),
+        csat_conteudo_online_opcao = IF(v_plataforma_acessivel IS NOT NULL, v_csat_conteudo_online_opcao, NULL),
         plataforma_acessivel = v_plataforma_acessivel,
         tipo_avaliacao = v_tipo_avaliacao,
         comentario_obrigatorio = v_comentario_obrigatorio,
