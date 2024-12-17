@@ -23,7 +23,7 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 - **Campos:**
     - id_cliente (INT, PK): Identificador único do cliente. Referenciado do sistema_db via procedure
     - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente. Referenciado do sistema_db via procedure
-    - id_bu (INT, FK, NOT NULL): Chave estrangeira referenciando business_unities(id_bu)
+    - nome_bu (VARCHAR(255), FK, NOT NULL): Chave estrangeira referenciando business_unities(nome_bu)
     - csat_cliente (DECIMAL(5,2), DEFAULT NULL): Média CSAT do cliente
     - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
     - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
@@ -35,6 +35,7 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 - **Campos:**
     - id_projeto (INT, PK): Identificador único do projeto. Referenciado do sistema_db via procedure
     - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto. Referenciado do sistema_db via procedure
+    - nome_bu (VARCHAR(255), FK): Referência a business_unities(nome_bu)
     - csat_projeto (DECIMAL(5,2), DEFAULT NULL): Média CSAT do projeto
     - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
     - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
@@ -93,6 +94,9 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - data_recebimento (DATETIME): Data de recebimento do entregável
     - csat_consultor (DECIMAL(5,2)): CSAT do consultor para o entregável
     - csat_conteudo (DECIMAL(5,2)): CSAT do conteúdo para o entregável
+    - csat_conteudo_opcao (VARCHAR(10): CSAT do conteúdo para o entregável (avaliação presencial)
+    - csat_conteudo_online_opcao (VARCHAR(10)): CSAT do conteúdo para o entregável (avaliação online)
+    - plataforma_acessivel (VARCHAR(3)): Indica se a plataforma foi considerada acessível pelo respondente (avaliação online)
     - comentario_obrigatorio (VARCHAR): Comentário obrigatório do formulário enviado
     - comentario_opcional (VARCHAR): Comentário opcional do formulário enviado
     - nome_respondente (VARCHAR): Comentário opcional do formulário enviado
@@ -134,9 +138,10 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 
 #### 10. log_processamento
 
-- **Descrição:** Registra o status de processamento do webhook.
+- **Descrição:** Registra o status de processamentos no banco
 - **Campos:**
-    - id_log (PK, INT): Identificador único do log.
+    - id_log (PK, INT): Identificador único do log
+    - id_entregavel (VARCHAR(255), FK): Referência ao entregável relacionado ao log.
     - status (ENUM): Status do processamento ('PROCESSADO', 'RECEBIDO', 'ERRO').
     - data_hora (DATETIME): Data e hora do registro.
       
@@ -156,6 +161,10 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 
 **Respostas e Perguntas:** Cada resposta está associada a uma única pergunta por meio da chave estrangeira id_pergunta na tabela respostas. Uma pergunta, por sua vez, pode estar vinculada a múltiplas respostas provenientes de diferentes entregáveis (formulários preenchidos). Isso estabelece um relacionamento de um-para-muitos entre perguntas e respostas, onde uma pergunta pode ter várias respostas, mas cada resposta está relacionada a uma única pergunta.
 
+**Entregáveis e Checklists:** Cada entregável está associado a um único checklist por meio da chave estrangeira id_checklist na tabela entregaveis. Um checklist, por sua vez, pode ter múltiplos entregáveis. Isso estabelece um relacionamento de um-para-muitos entre checklists e entregáveis, onde um checklist pode ter vários entregáveis, mas cada entregável está relacionado a um único checklist.
+
+**Entregáveis e Projetos:** Cada entregável pode estar associado a um único projeto por meio da chave estrangeira id_projeto na tabela entregaveis. Um projeto, por sua vez, pode ter múltiplos entregáveis. Isso estabelece um relacionamento de um-para-muitos entre projetos e entregáveis, onde um projeto pode ter vários entregáveis, mas cada entregável está relacionado a um único projeto.
+
 ## Fluxo de Dados e Integração
 
 **Recebimento de Dados:** Quando um formulário é enviado, uma função Lambda recebe o payload do webhook do Typeform e envia os dados para as devidas tabelas.<br>
@@ -163,10 +172,27 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 **Cálculo de Métricas:** Após a sincronização, são calculados os valores de CSAT e NPS.<br>
 **Envio de Métricas:** As métricas calculadas são enviadas de volta ao sistema_db através de procedures.<br>
 
-## Procedures e Triggers
+## Procedures e Events Implementados
 
-**Procedure:** (em desenvolvimento)
-**Trigger:** (em desenvolvimento)
+1. **sp_processa_entregavel** 
+**Descrição:** Marca um entregável como "PROCESSADO", calculando as métricas (CSAT e NPS) a partir das respostas recebidas. Atualiza os campos correspondentes nas tabelas relacionadas e registra a data de processamento.
+**Disparo:** Chamado manualmente ou por um event agendado
+
+2. **sp_cast_respostas** 
+**Descrição:** Converte as respostas recebidas do formulário em valores processáveis, como a transformação de respostas opcionais (A, B, C, D) em percentuais e atualiza os campos na tabela entregaveis.
+**Disparo:** Integrada ao fluxo de processamento do webhook
+
+3. **sp_atualiza_avaliacoes** 
+**Descrição:** Calcula e atualiza os valores agregados de CSAT e NPS nas tabelas avaliacoes, checklists, clientes, projetos e business_unities, considerando os dados processados nos entregáveis.
+**Disparo:** Chamado a cada 2 horas.
+
+4. **sp_relaciona_perguntas_entregaveis** 
+**Descrição:** Associa as perguntas às respostas correspondentes com base no id_entregavel e atualiza a tabela intermediária perguntas_entregaveis.
+**Disparo:** Chamado manualmente ou por um event agendado.
+
+5. **sp_atualiza_dados_de_pmohsm** 
+**Descrição:** Sincroniza dados do banco de pmohsm para o banco pbavaliacoes, atualizando informações de clientes, projetos e checklists.
+**Disparo:** Event agendado para execução em batch (2-3 vezes ao dia).
 
 ## Boas Práticas Adotadas
 
