@@ -10,8 +10,8 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 #### 1. business_unities
 - **Descrição:** Armazena as unidades de negócio (Business Units).
 - **Campos:** 
-    - id_bu (INT, PK): Identificador único da unidade de negócio. Referenciado do sistema_db via procedure
-    - nome_bu (VARCHAR(100), NOT NULL): Nome da unidade de negócio. Referenciado do sistema_db via procedure
+    - id_bu (PK, INT): Identificador único da unidade de negócio. Referenciado do sistema_db via procedure
+    - nome_bu (UNIQUE, VARCHAR(100), DEFAULT NULL): Nome da unidade de negócio. Referenciado do sistema_db via procedure
     - csat_bu (DECIMAL(5,2), DEFAULT NULL): Média CSAT da unidade de negócio
     - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
     - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
@@ -22,8 +22,8 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 - **Descrição:** Armazena informações dos clientes.
 - **Campos:**
     - id_cliente (INT, PK): Identificador único do cliente. Referenciado do sistema_db via procedure
-    - nome_cliente (VARCHAR(100), NOT NULL): Nome do cliente. Referenciado do sistema_db via procedure
-    - nome_bu (VARCHAR(255), FK, NOT NULL): Chave estrangeira referenciando business_unities(nome_bu)
+    - nome_cliente (VARCHAR(100), DEFAULT NULL): Nome do cliente. Referenciado do sistema_db via procedure
+    - nome_bu (VARCHAR(255), FK, DEFAULT NULL): Chave estrangeira referenciando business_unities(nome_bu)
     - csat_cliente (DECIMAL(5,2), DEFAULT NULL): Média CSAT do cliente
     - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
     - perc_neutros (DECIMAL(5,2)): Porcentagem de neutros
@@ -33,8 +33,8 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 
 - **Descrição:** Contém dados dos projetos.
 - **Campos:**
-    - id_projeto (INT, PK): Identificador único do projeto. Referenciado do sistema_db via procedure
-    - nome_projeto (VARCHAR(100), NOT NULL): Nome do projeto. Referenciado do sistema_db via procedure
+    - id_projeto (VARCHAR(45), PK): Identificador único do projeto. Referenciado do sistema_db via procedure
+    - nome_projeto (VARCHAR(100), DEFAULT NULL): Nome do projeto. Referenciado do sistema_db via procedure
     - nome_bu (VARCHAR(255), FK): Referência a business_unities(nome_bu)
     - csat_projeto (DECIMAL(5,2), DEFAULT NULL): Média CSAT do projeto
     - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
@@ -135,7 +135,22 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - csat_conteudo (DECIMAL(5,2)): Valor de CSAT para o conteúdo
     - ref (VARCHAR(50)): Referência da pergunta no Typeform
 
-#### 10. logs_processamento
+#### 10. perguntas_entregaveis
+
+- **Descrição:** Relaciona perguntas a seus respectivos formulários (entregáveis)
+- **Campos:**
+    - id_pergunta (INT, PK, AUTO_INCREMENT): Identificador único da pergunta. Recebe do webhook objeto definition/fields.
+    - id_avaliacao (INT, FK, NOT NULL): Chave estrangeira referenciando avaliacoes(id_avaliacao)
+    - texto_pergunta (VARCHAR(255), NOT NULL): Texto da pergunta
+ 
+#### 11. perguntas_respostas
+
+- **Descrição:** Combina dados das tabelas perguntas e respostas para facilitar análises e cálculos.
+- **Campos:**
+    - id_pergunta (FK, INT): Referência à pergunta
+    - id_resposta (FK, INT): Referência à resposta
+
+#### 12. logs_processamento
 
 - **Descrição:** Registra o status de processamentos no banco
 - **Campos:**
@@ -144,7 +159,7 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - status (VARCHAR(45)): Status do processamento (e.g., "Recebido", "Processado", "Erro").
     - mensagem (TEXT): Mensagem de erro ou detalhe do processamento.
     - data_processamento (DATETIME): Data e hora do registro.
-      
+
 ## Relacionamentos Chave
 
 **Unidade de Negócio (BU) e Clientes:** Cada cliente está associado a uma única unidade de negócio por meio da chave estrangeira id_bu na tabela **clientes**. Uma unidade de negócio, por sua vez, pode ter múltiplos clientes. Isso estabelece um relacionamento de **um-para-muitos** entre unidades de negócio e clientes, onde uma unidade de negócio pode ter vários clientes, mas cada cliente está relacionado a uma única unidade de negócio.
@@ -176,19 +191,19 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 
 1. **sp_processa_entregavel** 
 **Descrição:** Marca um entregável como "PROCESSADO", calculando as métricas (CSAT e NPS) a partir das respostas recebidas. Atualiza os campos correspondentes nas tabelas relacionadas e registra a data de processamento.
-**Disparo:** Chamado manualmente ou por um event agendado
+**Disparo:** Chamada manualmente ou por um event agendado
 
 2. **sp_cast_respostas** 
 **Descrição:** Converte as respostas recebidas do formulário em valores processáveis, como a transformação de respostas opcionais (A, B, C, D) em percentuais e atualiza os campos na tabela entregaveis.
-**Disparo:** Integrada ao fluxo de processamento do webhook
+**Disparo:** Chamada manualmente ou por um event agendado
 
 3. **sp_atualiza_avaliacoes** 
 **Descrição:** Calcula e atualiza os valores agregados de CSAT e NPS nas tabelas avaliacoes, checklists, clientes, projetos e business_unities, considerando os dados processados nos entregáveis.
-**Disparo:** Chamado a cada 2 horas.
+**Disparo:** Chamada manualmente ou por um event agendado.
 
 4. **sp_relaciona_perguntas_entregaveis** 
 **Descrição:** Associa as perguntas às respostas correspondentes com base no id_entregavel e atualiza a tabela intermediária perguntas_entregaveis.
-**Disparo:** Chamado manualmente ou por um event agendado.
+**Disparo:** Chamada manualmente ou por um event agendado.
 
 5. **sp_atualiza_dados_de_pmohsm** 
 **Descrição:** Sincroniza dados do banco de pmohsm para o banco pbavaliacoes, atualizando informações de clientes, projetos e checklists.
