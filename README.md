@@ -53,8 +53,8 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
 - **Descrição:** Armazena informações de checklists (turmas)
 - **Campos:**
     - id_checklist (INT, PK): Identificador único do checklist. Recebe campo oculto do payload webhook
-    - nome_checklist (VARCHAR(100), NOT NULL): Nome do checklist. Referenciado do sistema_db via procedure
-    - id_projeto (INT, FK, NOT NULL): Chave estrangeira referenciando projetos(id_projeto)
+    - nome_checklist (VARCHAR(100), DEFAULT NULL): Nome do checklist. Referenciado do sistema_db via procedure
+    - id_projeto (INT, FK, DEFAULT NULL): Chave estrangeira referenciando projetos(id_projeto)
     - csat_checklist (DECIMAL(5,2), DEFAULT NULL): Média CSAT do checklist
     - total_entregaveis (INT, DEFAULT 0): Total de entregáveis recebidos
     - perc_promotores (DECIMAL(5,2)): Porcentagem de promotores
