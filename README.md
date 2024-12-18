@@ -135,14 +135,15 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - csat_conteudo (DECIMAL(5,2)): Valor de CSAT para o conteúdo
     - ref (VARCHAR(50)): Referência da pergunta no Typeform
 
-#### 10. log_processamento
+#### 10. logs_processamento
 
 - **Descrição:** Registra o status de processamentos no banco
 - **Campos:**
     - id_log (PK, INT): Identificador único do log
     - id_entregavel (VARCHAR(255), FK): Referência ao entregável relacionado ao log.
-    - status (ENUM): Status do processamento ('PROCESSADO', 'RECEBIDO', 'ERRO').
-    - data_hora (DATETIME): Data e hora do registro.
+    - status (VARCHAR(45)): Status do processamento (e.g., "Recebido", "Processado", "Erro").
+    - mensagem (TEXT): Mensagem de erro ou detalhe do processamento.
+    - data_processamento (DATETIME): Data e hora do registro.
       
 ## Relacionamentos Chave
 
