@@ -72,7 +72,6 @@ Este banco de dados é projetado para se conectar com sistemas externos, permiti
     - total_entregaveis (INT, DEFAULT 0): Total de entregáveis recebidos
     - total_participantes (INT, DEFAULT 0): Total de participantes (preenchido manualmente)
     - status ENUM('Backlog', 'Em andamento', 'Encerrada') DEFAULT 'Backlog'
-    - id_avaliacao (PK, INT): Identificador único da avaliação
     - csat_avaliacao (DECIMAL(5,2), DEFAULT NULL): Média CSAT da avaliação
     - csat_conteudo (DECIMAL(5,2)): CSAT médio do conteúdo
     - csat_consultor (DECIMAL(5,2)): CSAT médio do consultor
